@@ -69,40 +69,37 @@ void Game::DrawBoard()
   #endif
 
 
-  //// BOARD TOP EDGE ////
-  {
-    for (int j = 0; j != BOARDWIDTH; j++) {
-      if (j == 0) {
-        //// BOARD TOP LEFT CORNER ////
-        // first column, top left corner (┌)
-        cout << BoxTopLeft;
-      }
-
-      //// TOP EDGE ////
-      cout << BoxHorizontal << BoxHorizontal << BoxHorizontal;
-
-      //// TOP RIGHT CORNER ////
-      if (j != BOARDWIDTH - 1) {
-        //// CELL TOP RIGHT CORENER ////
-        // Not last column, internal top edge (┬)
-        cout << BoxPerpenTop;
-      } else {
-        //// BOARD TOP RIGHT CORNER ////
-        // Last column, top right corner (┐)
-        cout << BoxTopRight;
-      }
+  // BOARD TOP EDGE
+  for (int j = 0; j != BOARDWIDTH; j++) {
+    if (j == 0) {
+      // BOARD TOP LEFT CORNER
+      // first column, top left corner (┌)
+      cout << BoxTopLeft;
     }
-    // Finished with this line of text
-    cout << endl;
+
+    // TOP EDGE
+    cout << BoxHorizontal << BoxHorizontal << BoxHorizontal;
+
+    // TOP RIGHT CORNER
+    if (j != BOARDWIDTH - 1) {
+      // CELL TOP RIGHT CORENER
+      // Not last column, internal top edge (┬)
+      cout << BoxPerpenTop;
+    } else {
+      // BOARD TOP RIGHT CORNER
+      // Last column, top right corner (┐)
+      cout << BoxTopRight;
+    }
   }
+  cout << endl;
 
   for (int i = 0; i != BOARDHEIGHT; i++) {
-    //// FIRST LINE - BODY ////
+    // FIRST LINE
     for (int j = 0; j != BOARDWIDTH; j++) {
-      //// CELL LEFT EDGE ////
+      // CELL LEFT EDGE
       cout << BoxVertical;
 
-      //// CELL BODY ////
+      // CELL BODY
       string prepend = " ";
       string append  = " ";
       string value   = " ";
@@ -112,7 +109,7 @@ void Game::DrawBoard()
         value = "o";
       cout << prepend << value << append;
 
-      //// BODY RIGHT EDGE ////
+      // BODY RIGHT EDGE
       if (j == BOARDWIDTH - 1) {
         cout << BoxVertical;
       }
@@ -120,20 +117,20 @@ void Game::DrawBoard()
     }
     cout << endl;
 
-    //// SECOND LINE - EDGE ////
+    // SECOND LINE
     for (int j = 0; j != BOARDWIDTH; j++) {
-      //// LEFT EDGE ////
+      // LEFT EDGE
       if (j == 0) {
-        ///// BOARD LEFT INTERSECT ////
+        // BOARD LEFT INTERSECT
         if (i != BOARDHEIGHT - 1) {
-          ///// BOARD LEFT EDGE (├) ////
+          // BOARD LEFT EDGE (├)
           if ((i + j) % 2) {
             cout << BoxPerpenLeftEm;
           } else {
             cout << BoxPerpenLeft;
           }
         } else {
-          ///// BOARD BOTTOM LEFT CORNER (└) ////
+          // BOARD BOTTOM LEFT CORNER (└)
           if ((i + j) % 2) {
             cout << BoxBottomLeftEm;
           } else {
@@ -141,16 +138,16 @@ void Game::DrawBoard()
           }
         }
       } else {
-        //// CELL INTERSECT ////
+        // CELL INTERSECT
         if (i != BOARDHEIGHT - 1) {
-          //// CELL BOTTOM EDGE (┼) ////
+          // CELL BOTTOM EDGE (┼)
           if ((i + j) % 2) {
             cout << BoxIntersectEm;
           } else {
             cout << BoxIntersect;
           }
         } else {
-          //// BOARD BOTTOM EDGE (┴) ////
+          // BOARD BOTTOM EDGE (┴)
           if ((i + j) % 2) {
             cout << BoxPerpenBottomEm;
           } else {
@@ -159,21 +156,22 @@ void Game::DrawBoard()
         }
       }
 
-      //// BOTTOM EDGE (─) ////
+      // BOTTOM EDGE (─)
       if ((i + j) % 2) {
         cout << BoxHorizontalEm << BoxHorizontalEm << BoxHorizontalEm;
       } else {
         cout << BoxHorizontal   << BoxHorizontal   << BoxHorizontal;
       }
 
-      //// BOARD RIGHT EDGE ////
-      // Note that the top right corner is handled in "board top edge"
+      // BOARD RIGHT EDGE
+      // Top right corner is handled in "board top edge"
+      // Right vertical edge is handled in "body right edge"
       if (j == BOARDWIDTH - 1) {
         if (i != BOARDHEIGHT - 1) {
-          //// BOARD RIGHT EDGE (┤) ////
+          // BOARD RIGHT EDGE (┤)
           cout << BoxPerpenRight;
         } else {
-          //// BOARD RIGHT CORNER (┘) ////
+          // BOARD RIGHT CORNER (┘)
           cout << BoxBottomRight;
         }
       }
