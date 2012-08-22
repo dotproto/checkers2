@@ -95,18 +95,45 @@ void Game::DrawBoard()
 
   for (int i = 0; i != BOARDHEIGHT; i++) {
     // FIRST LINE
+    string prepend = "";
+    string append  = "";
+    string value = "";
+
     for (int j = 0; j != BOARDWIDTH; j++) {
       // CELL LEFT EDGE
       cout << BoxVertical;
 
       // CELL BODY
-      string prepend = " ";
-      string append  = " ";
-      string value   = " ";
-      if (i <= 2)
-        value = "x";
-      else if (i >=5)
+      if (i == 5 && j == 0) {
+        prepend = "(";
+        append = ")";
+        value = "1";
+      } else if (i == 5 && j == 4) {
+        prepend = ">";
         value = "o";
+        append = "<";
+      } else if (i == 3 && j == 2) {
+        prepend = "(";
+        append = ")";
+        value = "1";
+      } else if (i == 4 && j == 3) {
+        prepend = " ";
+        value = "x";
+        append = " ";
+      } else if (i <= 2 && (i + j) % 2) {
+        prepend = " ";
+        append = " ";
+        value = "x";
+      } else if (i >= 5 && (i + j) % 2) {
+        prepend = " ";
+        append = " ";
+        value = "o";
+      } else {
+        prepend = " ";
+        append = " ";
+        value = " ";
+      }
+
       cout << prepend << value << append;
 
       // BODY RIGHT EDGE
