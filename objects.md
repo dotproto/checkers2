@@ -1,13 +1,15 @@
-...   ->   physical entity
-"..." -> conceptual entity
+* ...   ->   physical entity
+* "..." -> conceptual entity
 
-game
-"rules"
-pieces
-players
-"color" (i.e. team)
-"turn"
-*/ 
+&nbsp;
+
+* game
+* "rules"
+* pieces
+* players
+* "color" (i.e. team)
+* "turn"
+* */ 
 
 - - - - - - - - - - - - - - 
 
@@ -17,9 +19,6 @@ Game
 Games are the main entity of this program. A game contains contains and defines all other objects that are required to create, play, evaluate, and otherwise run a checkers game.
 
 A game of checkers must have 2 players (white and red), 24 pieces (12 per player), etc.
-
-
-
 
 Rules
 =====
