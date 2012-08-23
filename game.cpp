@@ -6,7 +6,7 @@ using namespace std;
 #define BOARDWIDTH  8
 #define POSPERROW BOARDWIDTH / 2
 
-Draughts Game::InitializePositions(Player player, enum BoardSide side) {
+Draughts Game::InitializePositions(Player &player, enum BoardSide side) {
   int posCount = POSPERROW * m_rowsPerPlayer;
   int startPos;
   int endPos;
@@ -24,7 +24,7 @@ Draughts Game::InitializePositions(Player player, enum BoardSide side) {
     current->m_king     = false;
     current->m_inPlay   = true;
     current->m_location = i;
-    current->m_ownedBy  = player; // TODO: player should be a pointer to player array entry
+    current->m_ownedBy  = &player; // TODO: I have no idea what I'm doing.
 
     draughtPositions.push_back(*current);
   }
@@ -32,21 +32,20 @@ Draughts Game::InitializePositions(Player player, enum BoardSide side) {
 };
 
 void Game::PrepareGame() {
-  // 1. Fetch user info and store it in m_players.
-  // 2. Make sure m_turnHistory is an empty vector.
-  // 3. Make sure m_blackDraughts and m_whiteDraughts are empty vecors.
+  // 1. Empty the follwoing vectors: m_player1Draughts, m_player2Draughts, and m_turnHistory
+  // 2. Populate draught vectors with starting positions.
 
   m_turnHistory.clear();
   m_player1Draughts.clear();
   m_player2Draughts.clear();
 
+  // Initialize white draught locations
+  InitializePositions(m_players[0], BOARD_TOP);
+  InitializePositions(m_players[1], BOARD_BOTTOM);
+
   // TODO: These are temp vars. Replace them with acutal impl
   Player p1;
   Player p2;
-
-  // Initialize white draught locations
-  InitializePositions(p1, BOARD_TOP);
-  InitializePositions(p1, BOARD_BOTTOM);
 };
 
 // Draw the board, draughts, and any "special" entities that need to appear on

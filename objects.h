@@ -29,7 +29,14 @@ enum Color
 typedef char Position;
 typedef vector<Position> Positions;
 
-struct Player {
+class Player {
+public:
+  void SetName();
+  string GetName();
+  void SetColor();
+  Color GetColor();
+
+private:
   Color     m_color;
   string    m_name;
 };
@@ -37,7 +44,7 @@ struct Player {
 struct Draught {
   bool      m_king;
   bool      m_inPlay;
-  Player    m_ownedBy;
+  Player    *m_ownedBy;
   Position  m_location;
 };
 typedef vector<Draught> Draughts;
@@ -104,5 +111,5 @@ private:
     BOARD_BOTTOM
   };
 
-  Draughts InitializePositions(Player player, BoardSide side);
+  Draughts InitializePositions(Player &player, BoardSide side);
 };
