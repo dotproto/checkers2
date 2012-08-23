@@ -42,20 +42,26 @@ struct Draught {
 };
 typedef vector<Draught> Draughts;
 
-class BoardLocation {
+class BoardLocation{
+public:
+  // Legal location for a draught to appear on the board
+  void SetLocation(Position value);
+  Position GetLocation();
+  // The main content of the board location (e.g. draught charcter, selection number, etc.)
+  void SetValue(char value);
+  char GetValue();
+  // Character that will appear in front of the location value
+  void SetAppend(char append);
+  char GetAppend();
+  // Character that will appear behind the location value
+  void SetPrepend(char prepend);
+  char GetPrepend();
+
+private:
   Position  position;
   char      m_value;   // Character that should appear in the center of the
   char      m_prepend;
   char      m_append;
-
-  void SetLocation(Position value);
-  Position GetLocation();
-  void SetValue(char value);
-  char GetValue();
-  void SetPrepend(char prepend);
-  char GetPrepend();
-  void SetAppend(char prepend);
-  char GetAppend();
 };
 typedef vector<BoardLocation> BoardLocations;
 
@@ -71,6 +77,9 @@ struct Turn {
 typedef vector<Turn> Turns;
 
 class Game {
+  Game();
+  ~Game();
+  void PrepareGame();
   void StartTurn(Player);
   void MoveDraught();
   void GetValidDraughts(vector<Draught>);
@@ -85,5 +94,15 @@ public:
 private:
   Player    m_players[2];
   Turns     m_turnHistory;
-  Draughts  m_draughts;
+  Draughts  m_player1Draughts;
+  Draughts  m_player2Draughts;
+  int       m_boardHeight;
+  int       m_boardWidth;
+  int       m_rowsPerPlayer;
+  enum BoardSide {
+    BOARD_TOP,
+    BOARD_BOTTOM
+  };
+
+  Draughts InitializePositions(Player player, BoardSide side);
 };

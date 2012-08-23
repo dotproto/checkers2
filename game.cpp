@@ -4,6 +4,50 @@ using namespace std;
 
 #define BOARDHEIGHT 8
 #define BOARDWIDTH  8
+#define POSPERROW BOARDWIDTH / 2
+
+Draughts Game::InitializePositions(Player player, enum BoardSide side) {
+  int posCount = POSPERROW * m_rowsPerPlayer;
+  int startPos;
+  int endPos;
+  if (side == BOARD_TOP) {
+    endPos = POSPERROW * BOARDHEIGHT;
+    startPos = endPos - posCount;
+  } else {
+    startPos = 1;
+    endPos = posCount;
+  }
+
+  Draughts draughtPositions;
+  for (Position i = startPos; i < endPos; i++) {
+    Draught *current    = new Draught;
+    current->m_king     = false;
+    current->m_inPlay   = true;
+    current->m_location = i;
+    current->m_ownedBy  = player; // TODO: player should be a pointer to player array entry
+
+    draughtPositions.push_back(*current);
+  }
+  return draughtPositions;
+};
+
+void Game::PrepareGame() {
+  // 1. Fetch user info and store it in m_players.
+  // 2. Make sure m_turnHistory is an empty vector.
+  // 3. Make sure m_blackDraughts and m_whiteDraughts are empty vecors.
+
+  m_turnHistory.clear();
+  m_player1Draughts.clear();
+  m_player2Draughts.clear();
+
+  // TODO: These are temp vars. Replace them with acutal impl
+  Player p1;
+  Player p2;
+
+  // Initialize white draught locations
+  InitializePositions(p1, BOARD_TOP);
+  InitializePositions(p1, BOARD_BOTTOM);
+};
 
 // Draw the board, draughts, and any "special" entities that need to appear on
 // the board.
@@ -25,8 +69,7 @@ using namespace std;
 // Given this layout, the funciton must provide special facilities to render
 // the top edge of the board, the left edge of the board, and the bottom-right
 // corener of each cell.
-void Game::DrawBoard()
-{
+void Game::DrawBoard() {
   // Define all used box drawing charactrs (platform specific)
   #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   // Flat edges
@@ -37,14 +80,18 @@ void Game::DrawBoard()
   static const string BoxTopLeft        = "\xDA";
   static const string BoxTopRight       = "\xBF";
   static const string BoxBottomLeft     = "\xC0";
+  static const string BoxBottomLeftEm   = BoxBottomLeft;
   static const string BoxBottomRight    = "\xD9";
   // Perpendicular lines on a given edge (e.g. T = top)
   static const string BoxPerpenTop      = "\xC2";
   static const string BoxPerpenLeft     = "\xC3";
+  static const string BoxPerpenLeftEm   = BoxPerpenLeft;
   static const string BoxPerpenRight    = "\xB4";
   static const string BoxPerpenBottom   = "\xC1";
+  static const string BoxPerpenBottomEm = BoxPerpenBottom;
   // Intersection of horizontal and vertical lines (e.g. +)
   static const string BoxIntersect      = "\xC5";
+  static const string BoxIntersectEm    = BoxIntersect;
   #else
   // Flat edges
   static const string BoxVertical       = "│";
@@ -95,45 +142,15 @@ void Game::DrawBoard()
 
   for (int i = 0; i != BOARDHEIGHT; i++) {
     // FIRST LINE
-    string prepend = "";
-    string append  = "";
-    string value = "";
+    string prepend = " ";
+    string append  = " ";
+    string value   = " ";
 
     for (int j = 0; j != BOARDWIDTH; j++) {
       // CELL LEFT EDGE
       cout << BoxVertical;
 
       // CELL BODY
-      if (i == 5 && j == 0) {
-        prepend = "(";
-        append = ")";
-        value = "1";
-      } else if (i == 5 && j == 4) {
-        prepend = ">";
-        value = "o";
-        append = "<";
-      } else if (i == 3 && j == 2) {
-        prepend = "(";
-        append = ")";
-        value = "1";
-      } else if (i == 4 && j == 3) {
-        prepend = " ";
-        value = "x";
-        append = " ";
-      } else if (i <= 2 && (i + j) % 2) {
-        prepend = " ";
-        append = " ";
-        value = "x";
-      } else if (i >= 5 && (i + j) % 2) {
-        prepend = " ";
-        append = " ";
-        value = "o";
-      } else {
-        prepend = " ";
-        append = " ";
-        value = " ";
-      }
-
       cout << prepend << value << append;
 
       // BODY RIGHT EDGE
