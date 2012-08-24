@@ -2,46 +2,62 @@
 #include "objects.h"
 using namespace std;
 
-#define BOARDHEIGHT 8
-#define BOARDWIDTH  8
-#define POSPERROW BOARDWIDTH / 2
+Game::Game() {
+  m_boardHeight = 8;
+  m_boardWidth = 8;
+  m_rowsPerPlayer = 3;
 
-Draughts Game::InitializePositions(Player &player, enum BoardSide side) {
-  int posCount = POSPERROW * m_rowsPerPlayer;
-  int startPos;
-  int endPos;
+  // TODO: Replace temp values with 
+  // Initialize Player 1
+  m_players[0].SetColor(COLOR_BLACK);
+  m_players[0].SetName("Sim");
+  m_players[0].SetSide(BOARD_TOP);
+  // Initialize Player 2
+  m_players[1].SetColor(COLOR_WHITE);
+  m_players[1].SetName("COMPUTER");
+  m_players[1].SetSide(BOARD_BOTTOM);
+
+  PrepareGame();
+}
+
+void Game::InitializePositions(Player &player, Draughts &draughts) {
+  int posCount = (m_boardWidth / 2) * m_rowsPerPlayer;
+  enum BoardSide side = player.GetSide();
+  int startPos = -1;
+  int endPos = -1;
+
   if (side == BOARD_TOP) {
-    endPos = POSPERROW * BOARDHEIGHT;
-    startPos = endPos - posCount;
+    endPos = (m_boardWidth / 2) * m_boardHeight;
+    startPos = endPos - posCount + 1; // +1 bumps the value to first entry in new row
   } else {
     startPos = 1;
     endPos = posCount;
   }
 
-  Draughts draughtPositions;
-  for (Position i = startPos; i < endPos; i++) {
+  for (Position i = startPos; i <= endPos; i++) {
     Draught *current    = new Draught;
     current->m_king     = false;
     current->m_inPlay   = true;
     current->m_location = i;
-    current->m_ownedBy  = &player; // TODO: I have no idea what I'm doing.
+    current->m_ownedBy  = &player;
 
-    draughtPositions.push_back(*current);
+    draughts.push_back(*current);
   }
-  return draughtPositions;
+
+  return;
 };
 
 void Game::PrepareGame() {
   // 1. Empty the follwoing vectors: m_player1Draughts, m_player2Draughts, and m_turnHistory
   // 2. Populate draught vectors with starting positions.
-
+  
   m_turnHistory.clear();
   m_player1Draughts.clear();
   m_player2Draughts.clear();
 
   // Initialize white draught locations
-  InitializePositions(m_players[0], BOARD_TOP);
-  InitializePositions(m_players[1], BOARD_BOTTOM);
+  InitializePositions(m_players[0], m_player1Draughts);
+  InitializePositions(m_players[1], m_player2Draughts);
 
   // TODO: These are temp vars. Replace them with acutal impl
   Player p1;
@@ -116,7 +132,7 @@ void Game::DrawBoard() {
 
 
   // BOARD TOP EDGE
-  for (int j = 0; j != BOARDWIDTH; j++) {
+  for (int j = 0; j != m_boardWidth; j++) {
     if (j == 0) {
       // BOARD TOP LEFT CORNER
       // first column, top left corner (┌)
@@ -127,7 +143,7 @@ void Game::DrawBoard() {
     cout << BoxHorizontal << BoxHorizontal << BoxHorizontal;
 
     // TOP RIGHT CORNER
-    if (j != BOARDWIDTH - 1) {
+    if (j != m_boardWidth - 1) {
       // CELL TOP RIGHT CORENER
       // Not last column, internal top edge (┬)
       cout << BoxPerpenTop;
@@ -139,13 +155,13 @@ void Game::DrawBoard() {
   }
   cout << endl;
 
-  for (int i = 0; i != BOARDHEIGHT; i++) {
+  for (int i = 0; i != m_boardHeight; i++) {
     // FIRST LINE
     string prepend = " ";
     string append  = " ";
     string value   = " ";
 
-    for (int j = 0; j != BOARDWIDTH; j++) {
+    for (int j = 0; j != m_boardWidth; j++) {
       // CELL LEFT EDGE
       cout << BoxVertical;
 
@@ -153,7 +169,7 @@ void Game::DrawBoard() {
       cout << prepend << value << append;
 
       // BODY RIGHT EDGE
-      if (j == BOARDWIDTH - 1) {
+      if (j == m_boardWidth - 1) {
         cout << BoxVertical;
       }
       // End line
@@ -161,11 +177,11 @@ void Game::DrawBoard() {
     cout << endl;
 
     // SECOND LINE
-    for (int j = 0; j != BOARDWIDTH; j++) {
+    for (int j = 0; j != m_boardWidth; j++) {
       // LEFT EDGE
       if (j == 0) {
         // BOARD LEFT INTERSECT
-        if (i != BOARDHEIGHT - 1) {
+        if (i != m_boardHeight - 1) {
           // BOARD LEFT EDGE (├)
           if ((i + j) % 2) {
             cout << BoxPerpenLeftEm;
@@ -182,7 +198,7 @@ void Game::DrawBoard() {
         }
       } else {
         // CELL INTERSECT
-        if (i != BOARDHEIGHT - 1) {
+        if (i != m_boardHeight - 1) {
           // CELL BOTTOM EDGE (┼)
           if ((i + j) % 2) {
             cout << BoxIntersectEm;
@@ -209,8 +225,8 @@ void Game::DrawBoard() {
       // BOARD RIGHT EDGE
       // Top right corner is handled in "board top edge"
       // Right vertical edge is handled in "body right edge"
-      if (j == BOARDWIDTH - 1) {
-        if (i != BOARDHEIGHT - 1) {
+      if (j == m_boardWidth - 1) {
+        if (i != m_boardHeight - 1) {
           // BOARD RIGHT EDGE (┤)
           cout << BoxPerpenRight;
         } else {

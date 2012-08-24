@@ -20,9 +20,16 @@ class Rule {};
 
 enum Color
 {
-  white = 0,
-  black,
-  red   = 1
+  COLOR_UNSET = -1,
+  COLOR_WHITE,
+  COLOR_BLACK,
+  COLOR_RED   = 1
+};
+
+enum BoardSide {
+  BOARD_UNSET = -1,
+  BOARD_TOP,
+  BOARD_BOTTOM
 };
 
 // Valid from 1-32
@@ -31,14 +38,18 @@ typedef vector<Position> Positions;
 
 class Player {
 public:
-  void SetName();
+  Player();
+  void SetName(string name);
   string GetName();
-  void SetColor();
+  void SetColor(Color color);
   Color GetColor();
+  void SetSide(BoardSide side);
+  BoardSide GetSide();
 
 private:
-  Color     m_color;
-  string    m_name;
+  BoardSide   m_side;
+  string      m_name;
+  Color       m_color;
 };
 
 struct Draught {
@@ -84,16 +95,15 @@ struct Turn {
 typedef vector<Turn> Turns;
 
 class Game {
-  Game();
-  ~Game();
-  void PrepareGame();
   void StartTurn(Player);
   void MoveDraught();
   void GetValidDraughts(vector<Draught>);
   void GetValidMoves();
 
 public:
+  Game();
   void DrawBoard();
+  void PrepareGame();
     // Draughts redDraughts,
     //   Draughts whiteDraughts,
     //   BoardLocations specialLocations);
@@ -106,10 +116,6 @@ private:
   int       m_boardHeight;
   int       m_boardWidth;
   int       m_rowsPerPlayer;
-  enum BoardSide {
-    BOARD_TOP,
-    BOARD_BOTTOM
-  };
 
-  Draughts InitializePositions(Player &player, BoardSide side);
+  void InitializePositions(Player &player, Draughts &draughts);
 };
