@@ -1,33 +1,34 @@
 #include <iostream>
-#include "objects.h"
+#include "game.h"
 using namespace std;
 
 Game::Game() {
   m_boardHeight = 8;
   m_boardWidth = 8;
-  m_rowsPerPlayer = 3;
+  m_boardPosPerRow = m_boardWidth / 2;
+  m_boardRowsPerPlayer = 3;
 
   // TODO: Replace temp values with 
   // Initialize Player 1
-  m_players[0].SetColor(COLOR_BLACK);
-  m_players[0].SetName("Sim");
-  m_players[0].SetSide(BOARD_TOP);
+  m_players[0].color = COLOR_BLACK;
+  m_players[0].name  = "Sim";
+  m_players[0].side  = BOARD_TOP;
   // Initialize Player 2
-  m_players[1].SetColor(COLOR_WHITE);
-  m_players[1].SetName("COMPUTER");
-  m_players[1].SetSide(BOARD_BOTTOM);
+  m_players[1].color = COLOR_WHITE;
+  m_players[1].name  ="COMPUTER";
+  m_players[1].side  = BOARD_BOTTOM;
 
   PrepareGame();
 }
 
 void Game::InitializePositions(Player &player, Draughts &draughts) {
-  int posCount = (m_boardWidth / 2) * m_rowsPerPlayer;
-  enum BoardSide side = player.GetSide();
+  int posCount = m_boardPosPerRow * m_boardRowsPerPlayer;
+  enum BoardSide side = player.side;
   int startPos = -1;
   int endPos = -1;
 
   if (side == BOARD_TOP) {
-    endPos = (m_boardWidth / 2) * m_boardHeight;
+    endPos = m_boardPosPerRow * m_boardHeight;
     startPos = endPos - posCount + 1; // +1 bumps the value to first entry in new row
   } else {
     startPos = 1;
@@ -161,6 +162,12 @@ void Game::DrawBoard() {
     string append  = " ";
     string value   = " ";
 
+    //for (Draughts.iterator it = m_player1Draughts.begin(); it != m_player1Draughts.end(); ++it) {
+    //  if (it->m_location /*== currentPos */) {
+    //    // NEED 
+    //  }
+    //}
+
     for (int j = 0; j != m_boardWidth; j++) {
       // CELL LEFT EDGE
       cout << BoxVertical;
@@ -237,4 +244,43 @@ void Game::DrawBoard() {
     }
     cout << endl;
   }
+}
+
+// Utility functions1
+bool Game::PositionToCoordinate(Position pos, int& col, int& row){
+  // Row and column converstion notes:
+  // 
+  // * row - distance from board's bottom edge.
+  // * col - distance from board's left edge.
+
+  // First, make sure the position is in bounds
+  if (!(pos >= 1 && pos <= 32)) {
+    return false;
+  }
+
+  row = this->m_boardHeight - (pos - 1) / this->m_boardPosPerRow - 1;
+
+  int colMod = 0;
+  if (row % 2 == 0) {
+    colMod++;
+  }
+
+  col = (3 - (pos - 1) % this->m_boardPosPerRow) * 2 + colMod;
+
+  return true;
+};
+
+bool Game::CoordinatesToPosition(int col, int row, Position& pos) {
+  // Only odd combinations of x & y are valid positions.
+  if ( (col + row) % 2 == 0) {
+      return false;
+  }
+  
+  // -1 is used to compensate for coord's 0 based index
+  int distRight  = (this->m_boardWidth - col - 1) / 2;
+  int distBottom = this->m_boardHeight - row - 1;
+
+  // for checkboard pattern, +1 adjusts to Position's 1-based index
+  pos = distBottom * this->m_boardPosPerRow + distRight + 1;
+  return true;
 }
