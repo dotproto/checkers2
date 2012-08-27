@@ -21,7 +21,7 @@ Game::Game() {
   PrepareGame();
 }
 
-void Game::InitializePositions(Player &player, Draughts &draughts) {
+void Game::InitializePositions(Player &player) {
   int posCount = m_boardPosPerRow * m_boardRowsPerPlayer;
   enum BoardSide side = player.side;
   int startPos = -1;
@@ -42,28 +42,40 @@ void Game::InitializePositions(Player &player, Draughts &draughts) {
     current->m_location = i;
     current->m_ownedBy  = &player;
 
-    draughts.push_back(*current);
+    m_draughts.push_back(*current);
   }
 
   return;
 };
 
 void Game::PrepareGame() {
-  // 1. Empty the follwoing vectors: m_player1Draughts, m_player2Draughts, and m_turnHistory
-  // 2. Populate draught vectors with starting positions.
+  // Game prep must perform the following actions:
+  //  1. Retrieve info about players (e.g. name, turn order, color, etc.)
+  //  2. Clear out the history and draught fectors.
+  //  3. Populate the vecotrs with inital data for start of game.
+  //  4. Return success/fail
   
+  // TODO: I think this may leak, not sure how to address it
   m_turnHistory.clear();
-  m_player1Draughts.clear();
-  m_player2Draughts.clear();
+  m_draughts.clear();
 
   // Initialize white draught locations
-  InitializePositions(m_players[0], m_player1Draughts);
-  InitializePositions(m_players[1], m_player2Draughts);
-
-  // TODO: These are temp vars. Replace them with acutal impl
-  Player p1;
-  Player p2;
+  InitializePositions(m_players[0]);
+  InitializePositions(m_players[1]);
 };
+
+bool Game::CheckDraughtInPos(Position currentPos, Draught &draught) {
+  Draughts::iterator iter;
+
+  for(iter = m_draughts.begin(); iter != m_draughts.end(); ++iter) {
+    if (currentPos == iter->m_location) {
+      draught = *iter;
+      return true;
+    }
+  }
+
+  return false;
+}
 
 // Draw the board, draughts, and any "special" entities that need to appear on
 // the board.
@@ -162,15 +174,24 @@ void Game::DrawBoard() {
     string append  = " ";
     string value   = " ";
 
-    //for (Draughts.iterator it = m_player1Draughts.begin(); it != m_player1Draughts.end(); ++it) {
-    //  if (it->m_location /*== currentPos */) {
-    //    // NEED 
-    //  }
-    //}
-
     for (int j = 0; j != m_boardWidth; j++) {
       // CELL LEFT EDGE
       cout << BoxVertical;
+      
+      // Check if any draughts belong in this board location
+      Position currentPos;
+      Draught draught;
+      value = " ";
+
+      if (CoordinatesToPosition(j, i, currentPos) && CheckDraughtInPos(currentPos, draught)) {
+        if (draught.m_ownedBy->color == COLOR_WHITE) {
+          value = "o";
+        } else if (draught.m_ownedBy->color == COLOR_BLACK) {
+          value = "x";
+        } else {
+          // TODO: Error handling
+        }
+      }
 
       // CELL BODY
       cout << prepend << value << append;
@@ -271,8 +292,10 @@ bool Game::PositionToCoordinate(Position pos, int& col, int& row){
 };
 
 bool Game::CoordinatesToPosition(int col, int row, Position& pos) {
-  // Only odd combinations of x & y are valid positions.
-  if ( (col + row) % 2 == 0) {
+  // Only odd combinations of x & y are valid positions. m_boardHeight is used
+  // to correct account for 0,0 coordiantes in non-standard board sizes.
+  if ((col + row + m_boardHeight) % 2 == 0) {
+      pos = -1;
       return false;
   }
   

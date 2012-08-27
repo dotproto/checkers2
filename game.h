@@ -33,14 +33,14 @@ public:
 private:
   Player    m_players[2];
   Turns     m_turnHistory;
-  Draughts  m_player1Draughts;
-  Draughts  m_player2Draughts;
+  Draughts  m_draughts;
   int       m_boardHeight;
   int       m_boardWidth;
   int       m_boardPosPerRow;
   int       m_boardRowsPerPlayer;
 
-  void InitializePositions(Player &player, Draughts &draughts);
+  void InitializePositions(Player &player);
+  bool CheckDraughtInPos(Position currentPos, Draught &draught);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

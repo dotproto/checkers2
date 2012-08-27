@@ -12,7 +12,7 @@ enum Color
   COLOR_UNSET = -1,
   COLOR_WHITE,
   COLOR_BLACK,
-  COLOR_RED   = 1
+  COLOR_RED   = COLOR_BLACK
 };
 
 enum BoardSide {

@@ -8,7 +8,7 @@ int main()
   cout << "Hello world!" << endl;
 
   Game myGame;
-  //myGame.DrawBoard();
+  myGame.DrawBoard();
   
   int x = 7, y = 4;
   Position pos = 5;
