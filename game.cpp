@@ -18,6 +18,15 @@ Game::Game() {
   m_players[1].name  ="COMPUTER";
   m_players[1].side  = BOARD_BOTTOM;
 
+  // TODO: Remove this block
+  BoardLocation foo;
+  foo.prepend  = '>';
+  foo.value    = '1';
+  foo.append   = '<';
+  foo.position = 10;
+
+  m_specialLocation.push_back(foo);
+
   PrepareGame();
 }
 
@@ -55,7 +64,7 @@ void Game::PrepareGame() {
   //  3. Populate the vecotrs with inital data for start of game.
   //  4. Return success/fail
   
-  // TODO: I think this may leak, not sure how to address it
+  // TODO: Does this leak?
   m_turnHistory.clear();
   m_draughts.clear();
 
@@ -64,7 +73,7 @@ void Game::PrepareGame() {
   InitializePositions(m_players[1]);
 };
 
-bool Game::CheckDraughtInPos(Position currentPos, Draught &draught) {
+bool Game::IsDraughtInPos(Position currentPos, Draught &draught) {
   Draughts::iterator iter;
 
   for(iter = m_draughts.begin(); iter != m_draughts.end(); ++iter) {
@@ -178,12 +187,17 @@ void Game::DrawBoard() {
       // CELL LEFT EDGE
       cout << BoxVertical;
       
+      // -----------------------------------------------------------------------
       // Check if any draughts belong in this board location
       Position currentPos;
       Draught draught;
-      value = " ";
+      prepend = " ";
+      append  = " ";
+      value   = " ";
 
-      if (CoordinatesToPosition(j, i, currentPos) && CheckDraughtInPos(currentPos, draught)) {
+      if (CoordinatesToPosition(j, i, currentPos)
+          && IsDraughtInPos(currentPos, draught))
+      {
         if (draught.m_ownedBy->color == COLOR_WHITE) {
           value = "o";
         } else if (draught.m_ownedBy->color == COLOR_BLACK) {
@@ -192,6 +206,21 @@ void Game::DrawBoard() {
           // TODO: Error handling
         }
       }
+
+      // Apply overlay to cell as appropriate
+      BoardLocations::iterator locIter;
+      for(locIter = m_specialLocation.begin();
+          locIter != m_specialLocation.end();
+          ++locIter)
+      {
+        if (currentPos == locIter->position) {
+          prepend = locIter->prepend;
+          value   = locIter->value;
+          append  = locIter->append;
+          break;
+        }
+      }
+      // -----------------------------------------------------------------------
 
       // CELL BODY
       cout << prepend << value << append;
@@ -206,19 +235,20 @@ void Game::DrawBoard() {
 
     // SECOND LINE
     for (int j = 0; j != m_boardWidth; j++) {
+      bool isEven = (i + j) % 2;
       // LEFT EDGE
       if (j == 0) {
         // BOARD LEFT INTERSECT
         if (i != m_boardHeight - 1) {
           // BOARD LEFT EDGE (├)
-          if ((i + j) % 2) {
+          if (isEven) {
             cout << BoxPerpenLeftEm;
           } else {
             cout << BoxPerpenLeft;
           }
         } else {
           // BOARD BOTTOM LEFT CORNER (└)
-          if ((i + j) % 2) {
+          if (isEven) {
             cout << BoxBottomLeftEm;
           } else {
             cout << BoxBottomLeft;
@@ -228,14 +258,14 @@ void Game::DrawBoard() {
         // CELL INTERSECT
         if (i != m_boardHeight - 1) {
           // CELL BOTTOM EDGE (┼)
-          if ((i + j) % 2) {
+          if (isEven) {
             cout << BoxIntersectEm;
           } else {
             cout << BoxIntersect;
           }
         } else {
           // BOARD BOTTOM EDGE (┴)
-          if ((i + j) % 2) {
+          if (isEven) {
             cout << BoxPerpenBottomEm;
           } else {
             cout << BoxPerpenBottom;
@@ -244,7 +274,7 @@ void Game::DrawBoard() {
       }
 
       // BOTTOM EDGE (─)
-      if ((i + j) % 2) {
+      if (isEven) {
         cout << BoxHorizontalEm << BoxHorizontalEm << BoxHorizontalEm;
       } else {
         cout << BoxHorizontal   << BoxHorizontal   << BoxHorizontal;

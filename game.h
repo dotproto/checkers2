@@ -31,16 +31,17 @@ public:
   bool CoordinatesToPosition(int row, int col, Position& pos);
 
 private:
-  Player    m_players[2];
-  Turns     m_turnHistory;
-  Draughts  m_draughts;
-  int       m_boardHeight;
-  int       m_boardWidth;
-  int       m_boardPosPerRow;
-  int       m_boardRowsPerPlayer;
+  Player          m_players[2];
+  Turns           m_turnHistory;
+  Draughts        m_draughts;
+  BoardLocations  m_specialLocation;
+  int             m_boardHeight;
+  int             m_boardWidth;
+  int             m_boardPosPerRow;
+  int             m_boardRowsPerPlayer;
 
   void InitializePositions(Player &player);
-  bool CheckDraughtInPos(Position currentPos, Draught &draught);
+  bool IsDraughtInPos(Position currentPos, Draught &draught);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
