@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <string>
 #include "game.h"
 using namespace std;
 
@@ -18,15 +20,6 @@ Game::Game() {
   m_players[1].name  ="COMPUTER";
   m_players[1].side  = BOARD_BOTTOM;
 
-  // TODO: Remove this block
-  BoardLocation foo;
-  foo.prepend  = '>';
-  foo.value    = '1';
-  foo.append   = '<';
-  foo.position = 10;
-
-  m_specialLocation.push_back(foo);
-
   PrepareGame();
 }
 
@@ -45,7 +38,7 @@ void Game::InitializePositions(Player &player) {
   }
 
   for (Position i = startPos; i <= endPos; i++) {
-    Draught *current    = new Draught;
+    Draught* current    = new Draught;
     current->m_king     = false;
     current->m_inPlay   = true;
     current->m_location = i;
@@ -71,6 +64,8 @@ void Game::PrepareGame() {
   // Initialize white draught locations
   InitializePositions(m_players[0]);
   InitializePositions(m_players[1]);
+
+  Move();
 };
 
 bool Game::IsDraughtInPos(Position currentPos, Draught &draught) {
@@ -235,7 +230,7 @@ void Game::DrawBoard() {
 
     // SECOND LINE
     for (int j = 0; j != m_boardWidth; j++) {
-      bool isEven = (i + j) % 2;
+      bool isEven = (i + j) % 2 != 0;
       // LEFT EDGE
       if (j == 0) {
         // BOARD LEFT INTERSECT
@@ -336,4 +331,177 @@ bool Game::CoordinatesToPosition(int col, int row, Position& pos) {
   // for checkboard pattern, +1 adjusts to Position's 1-based index
   pos = distBottom * this->m_boardPosPerRow + distRight + 1;
   return true;
+}
+
+void Game::Move() {
+  //int draught;
+  Position target = 10;
+  Player* p_currentPlayer = &m_players[1];
+
+  // TODO: Remove this block
+  BoardLocation foo;
+  foo.prepend  = '>';
+  foo.value    = '1';
+  foo.append   = '<';
+  foo.position = target;
+
+  m_specialLocation.push_back(foo);
+
+  Position mainTargetPosition = foo.position;
+  mainTargetPosition += (p_currentPlayer->side == BOARD_BOTTOM) ? m_boardPosPerRow : -(m_boardPosPerRow) ;
+  Position secondaryTargetPosition = mainTargetPosition;
+
+  pDraughts movableDraughts;
+  FindMovableDraughts(p_currentPlayer, movableDraughts);
+  
+  vector<int> userOptions;
+  m_specialLocation.clear();
+  int i = 1;
+  for (pDraughts::iterator iter = movableDraughts.begin(); iter != movableDraughts.end(); ++iter) {
+    userOptions.push_back(i);
+    
+    ostringstream ostr;
+    ostr << i;
+
+    BoardLocation loc;
+    loc.prepend  = '(';
+    loc.value    = ostr.str();
+    loc.append   = ')';
+    loc.position = (*iter)->m_location;
+    m_specialLocation.push_back(loc);
+    
+    i++;
+  }
+  
+  DrawBoard();
+  int userSelection;
+  cout << "Which draught do you want to move? ";
+  cin >> userSelection;
+
+  Draught* userSelectedDraught = movableDraughts.at(userSelection - 1);
+  // FindTargetPositions()
+}
+
+void Game::FindMovableDraughts(Player* p_currentPlayer, pDraughts& movableDraughts) {
+  // This loop assumes a pre-sorted list of draughts
+  pDraughts subset;
+  BoardSide side = p_currentPlayer->side;
+
+  for (Draughts::iterator iter = m_draughts.begin(); iter != m_draughts.end(); ++iter) {
+    if (iter->m_ownedBy == p_currentPlayer) {
+      subset.push_back(&(*iter));
+    }
+  }
+
+  for (pDraughts::iterator iter = subset.begin(); iter != subset.end(); ++iter) {
+    array<Position, 2> targets = GetMovePositions((*iter)->m_location, p_currentPlayer->side);
+
+    // Check if there's anything at the specified positions
+    for (int i = 0; i != targets.max_size(); ++i) {
+      if (targets[i] == 0) {
+        // Abort! Position is invalid
+        continue;
+      }
+
+      Draught* draughtAtPosition = NULL;
+      for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+        if (it->m_location == targets[i]) {
+          draughtAtPosition = &(*it);
+          break;
+        }
+      }
+
+      if (draughtAtPosition != NULL && draughtAtPosition->m_ownedBy == p_currentPlayer) {
+        // Abort! Position is invalid
+        continue;
+      }
+
+      // Okay, at this point we've got a position that is owned by the other player
+      // In order to determine if this position is valid, we must check if the position 
+      // behind it is empty. If it is, super. if not, well ... maybe another position 
+      // will be valid.
+      array<Position, 2> targetTargets = GetMovePositions(targets[i], p_currentPlayer->side);
+      bool posIsEmpty = true;
+      for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+        if (it->m_location == targetTargets[i]) {
+          // Found a match, we're done here.
+          posIsEmpty = false;
+          break;
+        }
+      }
+      if (!posIsEmpty) {
+        // Abort! Draught at the specified location; original target can't be moved!
+        continue;
+      }
+      
+      bool posNotFound = true;
+      for (pDraughts::iterator it = movableDraughts.begin(); it != movableDraughts.end(); ++it) {
+        if ((*iter)->m_location == (*it)->m_location ) {
+          posNotFound = false;
+          break;
+        }
+      }
+      if (posNotFound) {
+        movableDraughts.push_back( *iter );
+      }
+    } // for targets
+  } // for subset
+};
+
+void Game::FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught, Positions& targetPositions) {
+  array<Position, 2> targets = GetMovePositions(userSelectedDraught->m_location, p_currentPlayer->side);
+  for (int i = 0; i != targets.max_size(); ++i) {
+    if (targets[i] == 0) {
+      // Abort! Position is invalid
+      continue;
+    }
+
+    Draught* draughtAtPosition = NULL;
+    for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+      if (it->m_location == targets[i]) {
+        draughtAtPosition = &(*it);
+        break;
+      }
+    }
+  } // for targets
+}
+
+void Game::LimitPosToRow(Position row, Position& pos) {
+  Position rowMinValue = row * m_boardPosPerRow + 1;
+  Position rowMaxValue = rowMinValue + 3;
+
+  if ( !(pos <= rowMaxValue && pos >= rowMinValue) ) {
+    pos = 0;
+  }
+}
+
+std::array<Position, 2> Game::GetMovePositions(Position startPos, BoardSide side) {
+  // Top side moves down, bottom side moves up
+  array<Position, 2> returnVal;
+  int row = (startPos - 1) / m_boardPosPerRow;
+  Position tempPos;
+
+  // Adjust primary position by 1 row
+  if (side == BOARD_BOTTOM) {
+    tempPos = startPos + m_boardPosPerRow;
+    row += 1;
+  } else {
+    tempPos = startPos - m_boardPosPerRow;
+    row -= 1;
+  }
+
+  // Seondary position depends on the input position's 
+  if (row % 2 == 0) {
+    returnVal[0] = tempPos;
+    returnVal[1] = tempPos - 1;
+  } else {
+    returnVal[0] = tempPos + 1;
+    returnVal[1] = tempPos;
+  }
+
+  // 
+  LimitPosToRow(row, returnVal[0]);
+  LimitPosToRow(row, returnVal[1]);
+
+  return returnVal;
 }

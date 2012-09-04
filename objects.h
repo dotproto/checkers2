@@ -34,16 +34,17 @@ struct Player {
 struct Draught {
   bool      m_king;
   bool      m_inPlay;
-  Player    *m_ownedBy;
+  Player*   m_ownedBy;
   Position  m_location;
 };
 typedef vector<Draught> Draughts;
+typedef vector<Draught*> pDraughts;
 
 struct BoardLocation{
   Position  position;
-  char      prepend;
-  char      value;
-  char      append;
+  string    prepend;
+  string    value;
+  string    append;
 };
 typedef vector<BoardLocation> BoardLocations;
 

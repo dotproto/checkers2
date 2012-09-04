@@ -3,24 +3,21 @@
 #define GAME_H
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <array>
 #include "objects.h"
 
 class Game {
   void StartTurn(Player);
-  void MoveDraught();
   void GetValidDraughts(vector<Draught>);
   void GetValidMoves();
 
 
 public:
   Game();
-  void DrawBoard();
+  void Move();
   void PrepareGame();
-    // Draughts redDraughts,
-    //   Draughts whiteDraughts,
-    //   BoardLocations specialLocations);
+  void DrawBoard();
 
-  
   // Convert a standard board position into a pair of X,Y board coordintes (top
   // left corner).
   bool PositionToCoordinate(Position pos, int& row, int& col);
@@ -29,6 +26,17 @@ public:
   // position. Bool indicates the success/failure of the operation; pos's value
   // will be uncainged on failure.
   bool CoordinatesToPosition(int row, int col, Position& pos);
+
+  
+  // TODO
+  // Ask the player to move a draught
+  void PromptForMove(Player currentPlayer);
+  // Determine which (if any) draughts are movable
+  void FindMovableDraughts(Player* currentPlayer, pDraughts& movableDraughts);
+  void SortDraughtsByPosition();// Must sort before searching for movable draughts
+  bool IsDraughtMovable();      //
+  void MoveDraught();           // Execute the move. Follow this with a redraw call
+
 
 private:
   Player          m_players[2];
@@ -42,6 +50,9 @@ private:
 
   void InitializePositions(Player &player);
   bool IsDraughtInPos(Position currentPos, Draught &draught);
+  array<Position,2> GetMovePositions(Position start, BoardSide side);
+  void LimitPosToRow(Position row, Position& pos);
+  void Game::FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught, Positions& targetPositions);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
