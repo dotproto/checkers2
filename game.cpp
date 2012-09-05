@@ -335,21 +335,7 @@ bool Game::CoordinatesToPosition(int col, int row, Position& pos) {
 
 void Game::Move() {
   //int draught;
-  Position target = 10;
-  Player* p_currentPlayer = &m_players[1];
-
-  // TODO: Remove this block
-  BoardLocation foo;
-  foo.prepend  = '>';
-  foo.value    = '1';
-  foo.append   = '<';
-  foo.position = target;
-
-  m_specialLocation.push_back(foo);
-
-  Position mainTargetPosition = foo.position;
-  mainTargetPosition += (p_currentPlayer->side == BOARD_BOTTOM) ? m_boardPosPerRow : -(m_boardPosPerRow) ;
-  Position secondaryTargetPosition = mainTargetPosition;
+  Player* p_currentPlayer = &m_players[0];
 
   pDraughts movableDraughts;
   FindMovableDraughts(p_currentPlayer, movableDraughts);
@@ -373,13 +359,70 @@ void Game::Move() {
     i++;
   }
   
+  cout << endl;
   DrawBoard();
   int userSelection;
   cout << "Which draught do you want to move? ";
   cin >> userSelection;
 
+  // --------------------------------------------------------------------------
+
   Draught* userSelectedDraught = movableDraughts.at(userSelection - 1);
-  // FindTargetPositions()
+  Positions targetPositions;
+  FindTargetPositions(p_currentPlayer, userSelectedDraught, targetPositions);
+
+  m_specialLocation.clear();
+  userOptions.clear();
+  
+  // Highlight the user selected draught.
+  {
+    BoardLocation loc;
+    if (p_currentPlayer->color == COLOR_WHITE) {
+      loc.value = "o";
+    } else {
+      loc.value = "x";
+    }
+    loc.prepend  = '>';
+    loc.append   = '<';
+    loc.position = userSelectedDraught->m_location;
+  
+    m_specialLocation.push_back(loc);
+  }
+
+  i = 1;
+  // Highlight the potential target locations
+  for (Positions::iterator iter = targetPositions.begin(); iter != targetPositions.end(); ++iter) {
+    userOptions.push_back(i);
+    
+    ostringstream ostr;
+    ostr << i;
+
+    BoardLocation loc;
+    loc.prepend  = '(';
+    loc.value    = ostr.str();
+    loc.append   = ')';
+    loc.position = *iter;
+    m_specialLocation.push_back(loc);
+
+    i++;
+  }
+
+  cout << endl;
+  DrawBoard();
+  cout << "Where would you like to move this draught? ";
+  cin >> userSelection;
+
+  // --------------------------------------------------------------------------
+
+  // Execute move
+  userSelectedDraught->m_location = targetPositions[userSelection-1];
+  // TODO: 
+  // 1. Handle jumped pieces.
+  // 2. Switch back and forth for each turn.
+
+  // Cleanup
+  m_specialLocation.clear();
+  userOptions.clear();
 }
 
 void Game::FindMovableDraughts(Player* p_currentPlayer, pDraughts& movableDraughts) {
@@ -448,22 +491,68 @@ void Game::FindMovableDraughts(Player* p_currentPlayer, pDraughts& movableDraugh
   } // for subset
 };
 
+
 void Game::FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught, Positions& targetPositions) {
-  array<Position, 2> targets = GetMovePositions(userSelectedDraught->m_location, p_currentPlayer->side);
+  array<Position, 2> targets = GetMovePositions(selectedDraught->m_location, p_currentPlayer->side);
   for (int i = 0; i != targets.max_size(); ++i) {
     if (targets[i] == 0) {
-      // Abort! Position is invalid
+      // Abort! Position is invalid & already marked as such. Move on
       continue;
     }
 
     Draught* draughtAtPosition = NULL;
     for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
       if (it->m_location == targets[i]) {
+        // Match found! Store the address and continue evaluating...
         draughtAtPosition = &(*it);
         break;
       }
     }
+
+    if (draughtAtPosition == NULL) {
+      // HIT! - the position is free -- that means this move is valid!
+      // targets[i] points to a valid target position -- we're done here
+      continue;
+    }
+
+    if (draughtAtPosition->m_ownedBy == p_currentPlayer) {
+      // Abort! Target location is blocked by a draught owned by the current player!
+      // Mark the location as invalid and move on.
+      targets[i] = 0;
+      continue;
+    }
+
+    // Okay, at this point we've determined that a) the position contains a draught
+    // and b) the current player does not own that draught.
+    //
+    // Next we'll need to determine if the position **BEHIND** the target is valid.
+
+    array<Position, 2> targetTargets = GetMovePositions(targets[i], p_currentPlayer->side);
+    bool posIsEmpty = true;
+    for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+      // Reuse i in order to ensure that the target and targetTarget are on the same side (left/right)
+      if (it->m_location == targetTargets[i]) {
+        // Found a draught, we're done here.
+        posIsEmpty = false;
+        break;
+      }
+    }
+
+    if (posIsEmpty) {
+      // Oh sweet mercy, an empty space! We've done it! WE'VE FOUND A JUMP!
+      targets[i] = targetTargets[i];
+    } else {
+      // Abort! There's a draught at that location; player cannot move there
+      targets[i] = 0;
+      continue;
+    }
   } // for targets
+
+  for (int i = 0; i != targets.max_size(); ++i) {
+    if (targets[i] != 0) {
+      targetPositions.push_back(targets[i]);
+    }
+  }
 }
 
 void Game::LimitPosToRow(Position row, Position& pos) {
