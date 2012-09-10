@@ -14,7 +14,7 @@ class Game {
 
 public:
   Game();
-  void Move();
+  void Move(Player*& p_currentPlayer);
   void PrepareGame();
   void DrawBoard();
 
@@ -48,11 +48,13 @@ private:
   int             m_boardPosPerRow;
   int             m_boardRowsPerPlayer;
 
+  int GetRowFromPos(Position pos);
   void InitializePositions(Player &player);
   bool IsDraughtInPos(Position currentPos, Draught &draught);
   array<Position,2> GetMovePositions(Position start, BoardSide side);
   void LimitPosToRow(Position row, Position& pos);
-  void Game::FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught, Positions& targetPositions);
+  void FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught, Positions& targetPositions);
+  void FindJumpedDraught(Draught* draught, Position targetPos, Draught*& jumpedDraught);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

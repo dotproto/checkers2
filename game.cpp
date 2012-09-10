@@ -21,6 +21,15 @@ Game::Game() {
   m_players[1].side  = BOARD_BOTTOM;
 
   PrepareGame();
+
+  int turnCount = 0;
+  while (true) {
+    Player* p_currentPlayer = &this->m_players[turnCount % 2];
+    Move(p_currentPlayer);
+
+    turnCount++;
+  }
+  
 }
 
 void Game::InitializePositions(Player &player) {
@@ -64,8 +73,6 @@ void Game::PrepareGame() {
   // Initialize white draught locations
   InitializePositions(m_players[0]);
   InitializePositions(m_players[1]);
-
-  Move();
 };
 
 bool Game::IsDraughtInPos(Position currentPos, Draught &draught) {
@@ -333,15 +340,15 @@ bool Game::CoordinatesToPosition(int col, int row, Position& pos) {
   return true;
 }
 
-void Game::Move() {
+void Game::Move(Player*& p_currentPlayer) {
   //int draught;
-  Player* p_currentPlayer = &m_players[0];
+  //Player* p_currentPlayer = &this->m_players[1];
 
   pDraughts movableDraughts;
   FindMovableDraughts(p_currentPlayer, movableDraughts);
   
   vector<int> userOptions;
-  m_specialLocation.clear();
+  this->m_specialLocation.clear();
   int i = 1;
   for (pDraughts::iterator iter = movableDraughts.begin(); iter != movableDraughts.end(); ++iter) {
     userOptions.push_back(i);
@@ -354,7 +361,7 @@ void Game::Move() {
     loc.value    = ostr.str();
     loc.append   = ')';
     loc.position = (*iter)->m_location;
-    m_specialLocation.push_back(loc);
+    this->m_specialLocation.push_back(loc);
     
     i++;
   }
@@ -371,7 +378,7 @@ void Game::Move() {
   Positions targetPositions;
   FindTargetPositions(p_currentPlayer, userSelectedDraught, targetPositions);
 
-  m_specialLocation.clear();
+  this->m_specialLocation.clear();
   userOptions.clear();
   
   // Highlight the user selected draught.
@@ -386,7 +393,7 @@ void Game::Move() {
     loc.append   = '<';
     loc.position = userSelectedDraught->m_location;
   
-    m_specialLocation.push_back(loc);
+    this->m_specialLocation.push_back(loc);
   }
 
   i = 1;
@@ -402,7 +409,7 @@ void Game::Move() {
     loc.value    = ostr.str();
     loc.append   = ')';
     loc.position = *iter;
-    m_specialLocation.push_back(loc);
+    this->m_specialLocation.push_back(loc);
 
     i++;
   }
@@ -413,15 +420,25 @@ void Game::Move() {
   cin >> userSelection;
 
   // --------------------------------------------------------------------------
+  Position targetPosition = targetPositions[userSelection-1];
+
+  Draught* jumpedDraught = NULL;
+  FindJumpedDraught(userSelectedDraught, targetPosition, jumpedDraught);
+  // --------------------------------------------------------------------------
 
   // Execute move
-  userSelectedDraught->m_location = targetPositions[userSelection-1];
-  // TODO: 
-  // 1. Handle jumped pieces.
-  // 2. Switch back and forth for each turn.
+  userSelectedDraught->m_location = targetPosition;
+
+  if (jumpedDraught != NULL) {
+    jumpedDraught->m_location = 0;
+    jumpedDraught->m_inPlay = false;
+
+    // Player gets another turn!
+    Move(p_currentPlayer);
+  }
 
   // Cleanup
-  m_specialLocation.clear();
+  this->m_specialLocation.clear();
   userOptions.clear();
 }
 
@@ -430,7 +447,7 @@ void Game::FindMovableDraughts(Player* p_currentPlayer, pDraughts& movableDraugh
   pDraughts subset;
   BoardSide side = p_currentPlayer->side;
 
-  for (Draughts::iterator iter = m_draughts.begin(); iter != m_draughts.end(); ++iter) {
+  for (Draughts::iterator iter = this->m_draughts.begin(); iter != this->m_draughts.end(); ++iter) {
     if (iter->m_ownedBy == p_currentPlayer) {
       subset.push_back(&(*iter));
     }
@@ -447,7 +464,7 @@ void Game::FindMovableDraughts(Player* p_currentPlayer, pDraughts& movableDraugh
       }
 
       Draught* draughtAtPosition = NULL;
-      for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+      for (Draughts::iterator it = this->m_draughts.begin(); it != this->m_draughts.end(); ++it) {
         if (it->m_location == targets[i]) {
           draughtAtPosition = &(*it);
           break;
@@ -465,7 +482,7 @@ void Game::FindMovableDraughts(Player* p_currentPlayer, pDraughts& movableDraugh
       // will be valid.
       array<Position, 2> targetTargets = GetMovePositions(targets[i], p_currentPlayer->side);
       bool posIsEmpty = true;
-      for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+      for (Draughts::iterator it = this->m_draughts.begin(); it != this->m_draughts.end(); ++it) {
         if (it->m_location == targetTargets[i]) {
           // Found a match, we're done here.
           posIsEmpty = false;
@@ -501,7 +518,7 @@ void Game::FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught
     }
 
     Draught* draughtAtPosition = NULL;
-    for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+    for (Draughts::iterator it = this->m_draughts.begin(); it != m_draughts.end(); ++it) {
       if (it->m_location == targets[i]) {
         // Match found! Store the address and continue evaluating...
         draughtAtPosition = &(*it);
@@ -529,7 +546,7 @@ void Game::FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught
 
     array<Position, 2> targetTargets = GetMovePositions(targets[i], p_currentPlayer->side);
     bool posIsEmpty = true;
-    for (Draughts::iterator it = m_draughts.begin(); it != m_draughts.end(); ++it) {
+    for (Draughts::iterator it = this->m_draughts.begin(); it != this->m_draughts.end(); ++it) {
       // Reuse i in order to ensure that the target and targetTarget are on the same side (left/right)
       if (it->m_location == targetTargets[i]) {
         // Found a draught, we're done here.
@@ -556,8 +573,8 @@ void Game::FindTargetPositions(Player* p_currentPlayer, Draught* selectedDraught
 }
 
 void Game::LimitPosToRow(Position row, Position& pos) {
-  Position rowMinValue = row * m_boardPosPerRow + 1;
-  Position rowMaxValue = rowMinValue + 3;
+  Position rowMinValue = row * this->m_boardPosPerRow + 1;
+  Position rowMaxValue = rowMinValue + this->m_boardPosPerRow - 1;
 
   if ( !(pos <= rowMaxValue && pos >= rowMinValue) ) {
     pos = 0;
@@ -567,15 +584,15 @@ void Game::LimitPosToRow(Position row, Position& pos) {
 std::array<Position, 2> Game::GetMovePositions(Position startPos, BoardSide side) {
   // Top side moves down, bottom side moves up
   array<Position, 2> returnVal;
-  int row = (startPos - 1) / m_boardPosPerRow;
+  int row = GetRowFromPos(startPos);
   Position tempPos;
 
   // Adjust primary position by 1 row
   if (side == BOARD_BOTTOM) {
-    tempPos = startPos + m_boardPosPerRow;
+    tempPos = startPos + this->m_boardPosPerRow;
     row += 1;
   } else {
-    tempPos = startPos - m_boardPosPerRow;
+    tempPos = startPos - this->m_boardPosPerRow;
     row -= 1;
   }
 
@@ -593,4 +610,31 @@ std::array<Position, 2> Game::GetMovePositions(Position startPos, BoardSide side
   LimitPosToRow(row, returnVal[1]);
 
   return returnVal;
+}
+
+int Game::GetRowFromPos(Position pos) {
+ return (pos - 1) / this->m_boardPosPerRow; 
+}
+
+void Game::FindJumpedDraught(Draught* selectedDraught, Position targetPos, Draught*& jumpedDraught)
+{
+  int diff = targetPos - selectedDraught->m_location;
+  Position jumpedPos = 0;
+
+  if (abs(diff) == this->m_boardPosPerRow * 2 + 1 || abs(diff) == this->m_boardPosPerRow * 2 - 1) {
+    jumpedPos = (targetPos + selectedDraught->m_location) / 2;
+  } else {
+    return;
+  }
+
+  if (GetRowFromPos(selectedDraught->m_location) % 2 == 0) {
+    jumpedPos += 1;
+  }
+
+  for (Draughts::iterator iter = this->m_draughts.begin(); iter != this->m_draughts.end(); ++iter) {
+    if (iter->m_location == jumpedPos) {
+      jumpedDraught = &(*iter);
+      return;
+    }
+  }
 }
